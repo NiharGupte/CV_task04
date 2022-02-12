@@ -35,8 +35,8 @@ def brief_descriptor(source, source_keypoint, target, target_keypoint, n=50):
 def brute_force_distance(source_descriptor,target_descriptor):
     brute_force_obj = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
     num_matches = brute_force_obj.match(source_descriptor, target_descriptor)
-    num_matches = sorted(num_matches, key=lambda x: x.distance)
-    kp_distances = list(map(lambda x: x.distance, num_matches[0:50]))
+    num_matches = sorted(num_matches, key=lambda x: x.distance)[0:25]
+    kp_distances = list(map(lambda x: x.distance, num_matches))
     # Taking the first 50 matches among the key points
     # for i in num_matches[:50]:
     #     kp_distances.append(i.distance)
@@ -60,8 +60,8 @@ def retrieval_scores(masked_image, detector, descriptor):
     for i in database_files:
         s = cv2.imread(os.path.join(r"..\replicate\database_image", i))
         t = masked_image
-        kp1, kp2 = function_call_dict[detector](s, t, n=1000)
-        des1, des2 = function_call_dict[descriptor](s, kp1, t, kp2, n=1000)
+        kp1, kp2 = function_call_dict[detector](s, t, n=100)
+        des1, des2 = function_call_dict[descriptor](s, kp1, t, kp2, n=100)
         distance = brute_force_distance(des1, des2)
         image_kp_distances[os.path.join("../replicate/database_image", i)] = 1 - distance# Adding the similairty index
     # return path_to_intruder, np.max(list(image_kp_distances.values()))

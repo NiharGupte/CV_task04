@@ -26,15 +26,6 @@ def brute_force(source, source_keypoint, source_descriptor, target, target_keypo
     output_image = cv2.drawMatches(source, source_keypoint, target, target_keypoint, num_matches, None, flags=2)
     return output_image
 
-def logos_match(source, source_keypoint, source_descriptor, target, target_keypoint, target_descriptor):
-    gms = cv2.xfeatures2d.matchGMS()
-    num_matches = gms.match(source_descriptor, target_descriptor)
-    num_matches = sorted(num_matches, key=lambda x: x.distance)
-    # print("Descreiptor shape targ:", target_descriptor.shape,"Descreiptor shape source:", source_descriptor.shape, "Num_matches: ", len(num_matches))
-    output_image = cv2.drawMatches(source, source_keypoint, target, target_keypoint, num_matches, None, flags=2)
-    return output_image
-
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
