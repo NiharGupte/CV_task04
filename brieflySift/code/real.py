@@ -4,31 +4,17 @@ import argparse
 import numpy as np
 
 
-def fast_detector(source, target, n=50):
-    orb = cv2.ORB_create(n)
-    source_keypoint = orb.detect(source, None)
-    target_keypoint = orb.detect(target, None)
+def surf_detector(source, target, n=50):
+    surf = cv2.xfeatures2d.SURF_create(n)
+    source_keypoint = surf.detect(source, None)
+    target_keypoint = surf.detect(target, None)
+    print(len(target_keypoint), n)
     return source_keypoint, target_keypoint
 
-
-def dog_detector(source, target, n=50):
-    sift = cv2.xfeatures2d.SIFT_create(n)
-    source_keypoint = sift.detect(source, None)
-    target_keypoint = sift.detect(target, None)
-    return source_keypoint, target_keypoint
-
-
-def sift_descriptor(source, source_keypoint, target, target_keypoint, n=50):
-    sift = cv2.xfeatures2d.SIFT_create(n)
-    source_descriptor = sift.compute(source, source_keypoint)[1]
-    target_descriptor = sift.compute(target, target_keypoint)[1]
-    return source_descriptor, target_descriptor
-
-
-def brief_descriptor(source, source_keypoint, target, target_keypoint, n=50):
-    orb = cv2.ORB_create(n)
-    source_descriptor = orb.compute(source, source_keypoint)[1]
-    target_descriptor = orb.compute(target, target_keypoint)[1]
+def boost_descriptor(source, source_keypoint, target, target_keypoint, n=50):
+    boost = cv2.xfeatures2d.BoostDesc_create()
+    source_descriptor = boost.compute(source, source_keypoint)[1]
+    target_descriptor = boost.compute(target, target_keypoint)[1]
     return source_descriptor, target_descriptor
 
 
@@ -40,20 +26,28 @@ def brute_force(source, source_keypoint, source_descriptor, target, target_keypo
     output_image = cv2.drawMatches(source, source_keypoint, target, target_keypoint, num_matches, None, flags=2)
     return output_image
 
+def logos_match(source, source_keypoint, source_descriptor, target, target_keypoint, target_descriptor):
+    gms = cv2.xfeatures2d.matchGMS()
+    num_matches = gms.match(source_descriptor, target_descriptor)
+    num_matches = sorted(num_matches, key=lambda x: x.distance)
+    # print("Descreiptor shape targ:", target_descriptor.shape,"Descreiptor shape source:", source_descriptor.shape, "Num_matches: ", len(num_matches))
+    output_image = cv2.drawMatches(source, source_keypoint, target, target_keypoint, num_matches, None, flags=2)
+    return output_image
+
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    kp_list = ["fast", "dog"]
-    des_list = ["sift", "brief"]
+    kp_list = ["fast", "dog", "surf"]
+    des_list = ["sift", "brief", "boost"]
     trans_list = ["view", "scale", "rot", "light"]
 
     function_call_dict = {
-        "fast": fast_detector,
-        "dog": dog_detector,
         "sift": sift_descriptor,
-        "brief": brief_descriptor
+        "brief": brief_descriptor,
+        "surf": surf_detector,
+        "boost": boost_descriptor
     }
 
     parser.add_argument("-kp", "--kp", help='''Should be either of "fast" or "dog" ''', required=True)
