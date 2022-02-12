@@ -1,7 +1,7 @@
 import cv2
 import os
 import argparse
-
+import time
 
 def fast_detector(source, target, n=50):
     orb = cv2.ORB_create(n)
@@ -17,16 +17,15 @@ def dog_detector(source, target, n=50):
     return source_keypoint, target_keypoint
 
 
-def sift_descriptor(source, source_keypoint, target, target_keypoint, n=50):
-    sift = cv2.xfeatures2d.SIFT_create(n)
+def sift_descriptor(source, source_keypoint, target, target_keypoint):
+    sift = cv2.xfeatures2d.SIFT_create()
     source_descriptor = sift.compute(source, source_keypoint)[1]
     target_descriptor = sift.compute(target, target_keypoint)[1]
     return source_descriptor, target_descriptor
 
 
-def brief_descriptor(source, source_keypoint, target, target_keypoint, n=50):
+def brief_descriptor(source, source_keypoint, target, target_keypoint):
     orb = cv2.xfeatures2d.BriefDescriptorExtractor_create()
-    print(len(source_keypoint))
     source_descriptor = orb.compute(source, source_keypoint)[1]
     target_descriptor = orb.compute(target, target_keypoint)[1]
     return source_descriptor, target_descriptor
@@ -35,7 +34,13 @@ def brief_descriptor(source, source_keypoint, target, target_keypoint, n=50):
 def brute_force(source, source_keypoint, source_descriptor, target, target_keypoint, target_descriptor, nm):
     brute_force_obj = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
     num_matches = brute_force_obj.match(source_descriptor, target_descriptor)
-    num_matches = sorted(num_matches, key=lambda x: x.distance)[0:nm]
+    if nm < len(num_matches):
+        num_matches = sorted(num_matches, key=lambda x: x.distance)[0:nm]
+        print("Matches entered nm : ", nm, " Matches detected in brute force : ", len(num_matches))
+    else:
+        print("Number of matches detected : ", len(num_matches))
+        print("nm entered : ", nm)
+        print("Hence we will show all possible ", len(num_matches), " matches")
     output_image = cv2.drawMatches(source, source_keypoint, target, target_keypoint, num_matches, None, flags=2)
     return output_image
 
@@ -80,7 +85,7 @@ if __name__ == "__main__":
 
     for np in n_points:
         kp1, kp2 = function_call_dict[args.kp](S, T, np)
-        des1, des2 = function_call_dict[args.des](S, kp1, T, kp2, np)
+        des1, des2 = function_call_dict[args.des](S, kp1, T, kp2)
 
         output = brute_force(S, kp1, des1, T, kp2, des2, N)
 
