@@ -34,13 +34,8 @@ def brief_descriptor(source, source_keypoint, target, target_keypoint):
 def brute_force(source, source_keypoint, source_descriptor, target, target_keypoint, target_descriptor, nm):
     brute_force_obj = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
     num_matches = brute_force_obj.match(source_descriptor, target_descriptor)
-    if nm < len(num_matches):
-        num_matches = sorted(num_matches, key=lambda x: x.distance)[0:nm]
-        print("Matches entered nm : ", nm, " Matches detected in brute force : ", len(num_matches))
-    else:
-        print("Number of matches detected : ", len(num_matches))
-        print("nm entered : ", nm)
-        print("Hence we will show all possible ", len(num_matches), " matches")
+
+    num_matches = sorted(num_matches, key=lambda x: x.distance)[0:nm]
     output_image = cv2.drawMatches(source, source_keypoint, target, target_keypoint, num_matches, None, flags=2)
     return output_image
 
