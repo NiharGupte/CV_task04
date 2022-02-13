@@ -1,7 +1,6 @@
 import cv2
 import os
 import argparse
-import numpy as np
 
 
 def surf_detector(source, target, hT=5000):
