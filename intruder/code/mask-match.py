@@ -43,7 +43,7 @@ def brute_force_distance(source_descriptor,target_descriptor):
     # # Average normalized distance
     # # average_distance = 0
     # average_distance = np.mean(kp_distances/np.max(kp_distances))
-    average_distance = np.mean(kp_distances/np.max(kp_distances))
+    average_distance = np.mean(kp_distances/(np.max(kp_distances) + 1e-10))
     return average_distance
 
 
@@ -60,11 +60,10 @@ def retrieval_scores(masked_image, detector, descriptor):
     for i in database_files:
         s = cv2.imread(os.path.join(r"..\replicate\database_image", i))
         t = masked_image
-        kp1, kp2 = function_call_dict[detector](s, t, n=1000)
-        des1, des2 = function_call_dict[descriptor](s, kp1, t, kp2, n=1000)
+        kp1, kp2 = function_call_dict[detector](s, t)
+        des1, des2 = function_call_dict[descriptor](s, kp1, t, kp2)
         distance = brute_force_distance(des1, des2)
         image_kp_distances[os.path.join("../replicate/database_image", i)] = 1 - distance# Adding the similairty index
-    # return path_to_intruder, np.max(list(image_kp_distances.values()))
     return image_kp_distances
 
 
@@ -75,13 +74,6 @@ if __name__ == "__main__":
     kp_list = ["fast", "dog"]
     des_list = ["sift", "brief"]
     trans_list = ["view", "scale", "rot", "light"]
-
-    # function_call_dict = {
-    #     "fast": fast_detector,
-    #     "dog": dog_detector,
-    #     "sift": sift_descriptor,
-    #     "brief": brief_descriptor
-    # }
 
     parser.add_argument("-i", "--i", help='''Should be path of "maskLow.jpg"''', required=True)
     parser.add_argument("-j", "--j", help='''Should be path of "maskMiddle?.jpg"''', required=True)
@@ -97,40 +89,35 @@ if __name__ == "__main__":
 
     scores = retrieval_scores(masked_low, "dog", "sift")
 
-    print("Reference similarity index : ", scores[os.path.join("../replicate/database_image", "middle.jpg")])
-
-    reference = scores[os.path.join("../replicate/database_image", "middle.jpg")]
+    reference = scores[os.path.join("../replicate/database_image", "low.jpg")]
+    print("Reference similarity index : ", reference)
 
     scores_with_middle = retrieval_scores(masked_middle, "dog", "sift")
 
     potential_intruders = {}
     for i in scores_with_middle.keys():
-        if reference < scores_with_middle[i]:
+        if scores_with_middle[i] > reference:
             potential_intruders[i] = scores_with_middle[i]
-
     print("Number of Potential Intruders : ", len(potential_intruders.keys()))
 
-    if len(potential_intruders.keys()) > 0:
-        index = np.argmax(potential_intruders.values())
-        potential_intruders_list = list(potential_intruders.keys())
-        print(potential_intruders_list)
-        print("------------------------------------------------------------------------------------------------------")
-        print("Most potential intruder : ", potential_intruders_list[index], "with similarity score : ", potential_intruders[potential_intruders_list[index]])
+    if os.path.join("../replicate/database_image", "middle.jpg") in list(potential_intruders.keys()):
+        print("Intruder in database")
     else:
-        print("No potential intruders")
+        print("Intruder not in database")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # reading lines in retScores.txt
+    retScores_file = open('../replicate/output/retScores.txt', 'r+')
+    lines = retScores_file.readlines()
+    print(len(lines))
+    if len(lines)-1 > 0:
+        scores_dictionary = {}
+        for i in range(len(lines)):
+            val = lines[i].split(":")[1]
+            scores_dictionary[lines[i].split(":")[0]] = float(val.split("\n")[0])
+        if scores_with_middle[os.path.join("../replicate/database_image", "middle.jpg")] > np.max(list(scores_dictionary.values())):
+            cv2.imwrite("../replicate/output/maskMiddleBest.jpg", masked_middle)
+    string = str(args.j).split("Images/")[1] + " : " + str(scores_with_middle[os.path.join("../replicate/database_image", "middle.jpg")]) + "\n"
+    retScores_file.write(string)
+    retScores_file.close()
 
 
