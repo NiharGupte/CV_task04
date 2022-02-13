@@ -76,7 +76,7 @@ if __name__ == "__main__":
     trans_list = ["view", "scale", "rot", "light"]
 
     parser.add_argument("-i", "--i", help='''Should be path of "maskLow.jpg"''', required=True)
-    parser.add_argument("-j", "--j", help='''Should be path of "maskMiddle?.jpg"''', required=True)
+    parser.add_argument("-j", "--j", help='''Should be path of "mask_Middle?.jpg"''', required=True)
 
     args = parser.parse_args()
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     scores = retrieval_scores(masked_low, "dog", "sift")
 
     reference = scores[os.path.join("../replicate/database_image", "low.jpg")]
-    print("Reference similarity index : ", reference)
+    print("Reference similarity index : ", format(reference, ".3f"))
 
     scores_with_middle = retrieval_scores(masked_middle, "dog", "sift")
 
@@ -108,15 +108,15 @@ if __name__ == "__main__":
     # reading lines in retScores.txt
     retScores_file = open('../replicate/output/retScores.txt', 'r+')
     lines = retScores_file.readlines()
-    print(len(lines))
     if len(lines)-1 > 0:
         scores_dictionary = {}
-        for i in range(len(lines)):
+        for i in range(1, len(lines)):
             val = lines[i].split(":")[1]
             scores_dictionary[lines[i].split(":")[0]] = float(val.split("\n")[0])
         if scores_with_middle[os.path.join("../replicate/database_image", "middle.jpg")] > np.max(list(scores_dictionary.values())):
             cv2.imwrite("../replicate/output/maskMiddleBest.jpg", masked_middle)
-    string = str(args.j).split("Images/")[1] + " : " + str(scores_with_middle[os.path.join("../replicate/database_image", "middle.jpg")]) + "\n"
+
+    string = str(args.j).split("Images/")[1] + " : " + str(format(scores_with_middle[os.path.join("../replicate/database_image", "middle.jpg")], ".3f")) + "\n"
     retScores_file.write(string)
     retScores_file.close()
 
