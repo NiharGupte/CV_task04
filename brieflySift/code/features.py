@@ -1,7 +1,7 @@
 import cv2
 import os
 import argparse
-import time
+
 
 def fast_detector(source, target, n=50):
     orb = cv2.ORB_create(n)
